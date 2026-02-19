@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 관리 (조회/수정) ✨</title>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 24px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3ecf8e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #34b379;
+        }
+
+        button.update-btn {
+            background-color: #3b82f6;
+            /* Blue for update */
+            margin-top: 1rem;
+        }
+
+        button.update-btn:hover {
+            background-color: #2563eb;
+        }
+
+        button.delete-btn {
+            background-color: #ef4444;
+            /* Red for delete */
+            margin-top: 1rem;
+        }
+
+        button.delete-btn:hover {
+            background-color: #dc2626;
+        }
+
+        #result {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+            display: none;
+            text-align: left;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .error {
+            color: #e74c3c;
+            margin-top: 1rem;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .success {
+            color: #3ecf8e;
+            margin-top: 1rem;
+            display: none;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .delete-confirm-area {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #fff1f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+        }
+
+        .delete-confirm-area p {
+            color: #991b1b;
+            font-size: 14px;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>🔍 사용자 조회 & 수정</h1>
+        <p style="color: #666; margin-bottom: 20px; font-size: 14px;">순번(1~20) 또는 전화번호 검색</p>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" id="searchInput" placeholder="예: 1 또는 010-1234-5678" style="margin-bottom: 0;" />
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="searchUser()" style="flex: 2;">조회하기</button>
+            <button onclick="openRegisterPopup()" style="flex: 1; background-color: #8b5cf6;">등록</button>
+        </div>
+
+        <div id="result">
+            <input type="hidden" id="userId">
+
+            <div class="input-group">
+                <label>번호 (No.)</label>
+                <input type="text" id="userNo" readonly style="background-color: #f9f9f9; color: #888;">
+            </div>
+
+            <div class="input-group">
+                <label for="nameInput">이름</label>
+                <input type="text" id="nameInput">
+            </div>
+
+            <div class="input-group">
+                <label for="phoneInput">전화번호</label>
+                <input type="text" id="phoneInput">
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="updateUser()" class="update-btn" style="flex: 1;">수정하기</button>
+                <button onclick="showDeleteConfirm()" class="delete-btn" style="flex: 1;">삭제하기</button>
+            </div>
+
+            <div id="deleteConfirmArea" class="delete-confirm-area">
+                <p>🚨 정말 삭제하시겠습니까?</p>
+                <p style="font-weight: normal; margin-bottom: 10px;">확인을 위해 <strong>이름</strong>을 입력해주세요.</p>
+                <input type="text" id="deleteNameInput" placeholder="이름 입력" style="margin-bottom: 0.5rem;">
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="confirmDelete()" class="delete-btn"
+                        style="flex: 1; margin-top: 0; background-color: #dc2626;">삭제 확인</button>
+                    <button onclick="cancelDelete()"
+                        style="flex: 1; margin-top: 0; background-color: #9ca3af;">취소</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="msgArea" class="error"></div>
+    </div>
+
+    <script>
+        // Supabase REST API 설정
+        const SUPABASE_URL = 'https://mizzulcysfmxfjecrnaw.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1penp1bGN5c2ZteGZqZWNybmF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MzkyNjEsImV4cCI6MjA4NzAxNTI2MX0.Khh2uKTC2hAMizE4QLj8X648J1zIu0OqS1p53hIhjkE';
+
+        async function searchUser() {
+            const input = document.getElementById('searchInput').value.trim();
+            const resultDiv = document.getElementById('result');
+            const msgArea = document.getElementById('msgArea');
+
+            // 초기화
+            resultDiv.style.display = 'none';
+            msgArea.style.display = 'none';
+            msgArea.className = 'error'; // default to error style
+            cancelDelete(); // 삭제창 닫기
+
+            if (!input) {
+                alert("검색어를 입력해주세요!");
+                return;
+            }
+
+            try {
+                // 사용자 전체 조회 (순번으로 정렬하여 안정적인 순서 보장)
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?select=*&order=user_no.asc`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (!response.ok) throw new Error("데이터 조회 실패");
+
+                const users = await response.json();
+
+                let foundUser = null;
+
+                // 1. 숫자면 순번으로 찾기
+                // user_no 컬럼이 1부터 시작한다고 가정
+                if (/^\d+$/.test(input)) {
+                    const searchNum = parseInt(input);
+                    // user_no가 있다면 그것으로 검색, 없다면 배열 인덱스
+                    foundUser = users.find(u => u.user_no === searchNum);
+
+                    // 만약 user_no로 못 찾았는데 인덱스로 접근 가능하다면 (예비책)
+                    if (!foundUser && searchNum > 0 && searchNum <= users.length) {
+                        foundUser = users[searchNum - 1];
+                    }
+                }
+
+                // 2. 못 찾았으면 검색어로 찾기 (이름 or 전화번호)
+                if (!foundUser) {
+                    foundUser = users.find(u =>
+                        (u.phone_number && u.phone_number.includes(input)) ||
+                        (u.name && u.name.includes(input))
+                    );
+                }
+
+                if (foundUser) {
+                    // 데이터 채우기
+                    document.getElementById('userId').value = foundUser.id;
+                    document.getElementById('userNo').value = foundUser.user_no || '-'; // 번호 표시
+                    document.getElementById('nameInput').value = foundUser.name;
+                    document.getElementById('phoneInput').value = foundUser.phone_number || '';
+
+                    resultDiv.style.display = 'block';
+                } else {
+                    msgArea.textContent = "사용자를 찾을 수 없어요 😢";
+                    msgArea.style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error(error);
+                msgArea.textContent = "오류가 발생했어요.";
+                msgArea.style.display = 'block';
+            }
+        }
+
+        async function updateUser() {
+            const userId = document.getElementById('userId').value;
+            const newName = document.getElementById('nameInput').value.trim();
+            const newPhone = document.getElementById('phoneInput').value.trim();
+            const msgArea = document.getElementById('msgArea');
+
+            if (!userId) return;
+            if (!newName) {
+                alert("이름은 필수입니다!");
+                return;
+            }
+
+            try {
+                // ID로 특정 사용자 업데이트
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal' // 응답 최소화
+                    },
+                    body: JSON.stringify({
+                        name: newName,
+                        phone_number: newPhone
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("업데이트 실패");
+                }
+
+                msgArea.textContent = "수정이 완료되었어요! 🎉";
+                msgArea.className = 'success'; // 성공 스타일
+                msgArea.style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                msgArea.textContent = "수정 중 오류가 발생했어요 😢";
+                msgArea.className = 'error';
+                msgArea.style.display = 'block';
+            }
+        }
+
+        // 삭제 관련 함수들
+        function showDeleteConfirm() {
+            const deleteConfirmArea = document.getElementById('deleteConfirmArea');
+            deleteConfirmArea.style.display = 'block';
+
+            const deleteNameInput = document.getElementById('deleteNameInput');
+            deleteNameInput.value = '';
+            deleteNameInput.focus();
+        }
+
+        function cancelDelete() {
+            document.getElementById('deleteConfirmArea').style.display = 'none';
+            document.getElementById('deleteNameInput').value = '';
+        }
+
+        async function confirmDelete() {
+            const userId = document.getElementById('userId').value;
+            const currentName = document.getElementById('nameInput').value; // 현재 DB 조회된 이름 (또는 수정된 이름인데, 삭제 확인을 위해선 사용자 입력을 믿어야 함)
+            // 더 정확히는 DB상의 원래 이름을 써야 하지만 UI상 보이는 이름으로 확인하도록 함
+
+            const inputName = document.getElementById('deleteNameInput').value.trim();
+            const msgArea = document.getElementById('msgArea');
+
+            if (!inputName) {
+                alert("이름을 입력해주세요.");
+                return;
+            }
+
+            if (inputName !== currentName) {
+                alert("이름이 일치하지 않습니다. 다시 확인해주세요.");
+                return;
+            }
+
+            if (!confirm("정말로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/users?id=eq.${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (!response.ok) throw new Error("삭제 실패");
+
+                // UI 초기화
+                document.getElementById('result').style.display = 'none';
+                document.getElementById('searchInput').value = '';
+                cancelDelete();
+
+                msgArea.textContent = "성공적으로 삭제되었습니다. 👋";
+                msgArea.className = 'success';
+                msgArea.style.display = 'block';
+
+            } catch (error) {
+                console.error(error);
+                msgArea.textContent = "삭제 중 오류가 발생했어요. 😢";
+                msgArea.className = 'error';
+                msgArea.style.display = 'block';
+            }
+        }
+
+        function openRegisterPopup() {
+            const width = 450;
+            const height = 550;
+            const left = (window.screen.width / 2) - (width / 2);
+            const top = (window.screen.height / 2) - (height / 2);
+
+            window.open('insert.html', 'RegisterUser', `width=${width},height=${height},left=${left},top=${top}`);
+        }
+    </script>
+
+</body>
+
+</html>
